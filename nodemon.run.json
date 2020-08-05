@@ -1,0 +1,8 @@
+{
+  "watch": [
+    "./dist/bundle.js"
+  ],
+  "ext": "js",
+  "delay": "500",
+  "quiet": true
+}
