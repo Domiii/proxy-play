@@ -18,6 +18,16 @@ let serverHeadersBlacklist = new Set([
   'connection',
 ]);
 
+/**
+ * NOTE: headers are case insensitive
+ * @see https://stackoverflow.com/questions/5258977/are-http-headers-case-sensitive
+ */
+function getHeader(headers, headerName) {
+  headerName = headerName.toLowerCase();
+  const key = Object.keys(headers).find(h => h.toLowerCase() === headerName);
+  return key && headers[key] || null;
+}
+
 /*
 get handler handles standard GET reqs as well as streams
 */
@@ -92,19 +102,19 @@ const proxy = method => (req, res, next) => {
     // console.debug(`  ${JSON.stringify(req.headers, null, 4)}`);
 
 
-    // TODO: replace request with node-fetch
+    // TODO: `request` is deprecated. Replace with `node-fetch`.
     //      see: https://stackoverflow.com/questions/55349722/writing-the-stream-returned-by-node-fetch
     request(url, {
       method,
       headers,
       strictSSL: false
     }) // request the document that the user specified
-      .on('response', function (req2) {
-        res.statusCode = req2.statusCode;
+      .on('response', function (res1) {
+        res.statusCode = res1.statusCode;
         console.debug(`Request for "${url}" at "${req.connection.remoteAddress}": ${res.statusCode}`);
 
         // if the page already supports cors, redirect to the URL directly
-        if (req2.headers['access-control-allow-origin'] === '*') {
+        if (res1.headers['access-control-allow-origin'] === '*') {
           console.debug('  Redirect:', url);
           res.redirect(url, next);
         }
@@ -118,13 +128,19 @@ const proxy = method => (req, res, next) => {
         }
 
         // add all other headers
-        for (var header in req2.headers) {
+        for (var header in res1.headers) {
           if (!serverHeadersBlacklist.has(header)) {
-            res.header(header, req2.headers[header]);
+            res.header(header, res1.headers[header]);
           }
         }
-        // must flush here -- otherwise pipe() will include the headers anyway!
+        // must flush here -- otherwise pipe() will pipe all the headers
         res.flushHeaders();
+
+        // handle JS files
+        const contentType = getHeader(res1.headers, 'content-type');
+        if (contentType.toLowerCase().includes('javascript')) {
+          // TODO: add dbux transformation?
+        }
       })
       // .on('data', function (chunk) {
       //   data += chunk.length;
@@ -133,6 +149,8 @@ const proxy = method => (req, res, next) => {
         res.end(); // End the response when the stream ends
       })
       .on('error', handleError)
+
+      // TODO: cannot just pipe
       .pipe(res); // Stream requested url to response
     // next();
   }
