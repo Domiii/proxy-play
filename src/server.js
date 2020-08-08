@@ -2,12 +2,15 @@ import {
   proxyRoot,
   proxyChild
  } from './proxy';
-import Express from 'express';
+import express from 'express';
 
-const app = Express();
+const app = express();
 
 app.use('/root/*', proxyRoot);
 app.use('/child/*', proxyChild);
+
+// -> http://localhost:8080/dbux-runtime/index.js
+app.use('/dbux-runtime', express.static('node_modules/@dbux/runtime/dist'))
 
 // app.use(
 //   function errorHandler(err, req, res, next) {

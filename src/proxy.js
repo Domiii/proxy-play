@@ -84,7 +84,7 @@ function _proxy(req, res, next, cfg) {
       if (!path.startsWith('/')) {
         path = '/' + path;
       }
-      console.debug(` file  ${targetUrl.replace(rootUrlObj?.origin?.toLowerCase() || '', '')}`);
+      console.debug(` file  ${targetUrl.replace(rootUrlObj?.origin?.toLowerCase() || '', '') || '/'}`);
       return path;
     },
 

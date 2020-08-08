@@ -13,9 +13,13 @@
     "build:dev": "webpack -d --mode development",
     "build:prod": "webpack -p --mode production",
     "start:build": "nodemon --config nodemon.build.json --exec \"node --enable-source-maps --stack-trace-limit=1000 -- ./node_modules/webpack/bin/webpack.js --mode development --watch\"",
-    "start:run": "nodemon --config nodemon.run.json --exec \"node --inspect --enable-source-maps --stack-trace-limit=1000 -- ./dist/bundle.js\""
+    "start:run": "nodemon --config nodemon.run.json --exec \"node --inspect --enable-source-maps --stack-trace-limit=1000 -- ./dist/bundle.js\"",
+    "dbux:refresh": "yarn add ../dbux/dbux-runtime ../dbux/dbux-babel-plugin ../dbux/dbux-cli"
   },
   "dependencies": {
+    "@dbux/babel-plugin": "../dbux/dbux-babel-plugin",
+    "@dbux/cli": "../dbux/dbux-cli",
+    "@dbux/runtime": "../dbux/dbux-runtime",
     "cheerio": "^1.0.0-rc.3",
     "colors": "^1.4.0",
     "express": "^4.17.1",

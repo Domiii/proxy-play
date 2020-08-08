@@ -80,7 +80,9 @@ function initCode(meta) {
     observerInitCode,
     fixEvalInitCode
   ].map(s => `(function() {${(s && s(meta) || '').trim()}})();` + '\n\n').join('');
-  return `<script>if (!window.__custom_proxy_stuff_initialized_az8gf6zz) {
+  return `
+  <script src="/dbux-runtime/index.js"></script>
+  <script>if (!window.__custom_proxy_stuff_initialized_az8gf6zz) {
     window.__custom_proxy_stuff_initialized_az8gf6zz = true;
     ${code}
   }</script>`;
