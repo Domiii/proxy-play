@@ -1,9 +1,24 @@
-import proxy from './proxy';
+import {
+  proxyRoot,
+  proxyChild
+ } from './proxy';
 import Express from 'express';
 
 const app = Express();
 
-app.use(proxy);
+app.use('/root/*', proxyRoot);
+app.use('/child/*', proxyChild);
+
+// app.use(
+//   function errorHandler(err, req, res, next) {
+//     if (!res.headersSent) {
+//       // return next(err)
+//       res.status(500)
+//     }
+//     console.error(err);
+//     res.send(`<pre>${err.toString()}</pre>`).end();
+//   }
+// );
 
 export default app;
 

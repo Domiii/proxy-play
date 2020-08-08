@@ -1,38 +1,90 @@
 import proxy from 'express-http-proxy';
+import pull from 'lodash/pull';
 import { transformContent } from './transforms';
 import { getHeader, getContentType } from './util/httpUtil';
 
+let rootUrlObj;
+
+const BR = 'br';
+
 /**
  * Has several customization options.
+ * WARNING: this is not thread-safe! Will fail if requesting different urls in parallel.
  * 
- * @see https://github.com/villadora/express-http-proxy/blob/ad94d320390735157133e405969161d82c6ab58d/index.js
+ * @see https://github.com/villadora/express-http-proxy/tree/master/index.js
  */
-export default function (req, res, next) {
-  
+export function proxyRoot(req, res, next) {
+  return _proxy(req, res, next, { root: true, relativePath: '/root' });
+}
+
+export function proxyChild(req, res, next) {
+  return _proxy(req, res, next, { root: false, relativePath: '/child' });
+}
+
+function _proxy(req, res, next, cfg) {
+  const { root: isRoot, relativePath } = cfg;
+
   // TODO: handle sub-sequent requests using memoized host?
   // TODO: handle redirects
 
-  const targetUrl = req.path.toLowerCase().substring(1);
-  const urlObj = new URL(targetUrl);
-  let {
-    origin,
-    protocol,
-    host
-  } = urlObj;
+  let targetUrl = req.baseUrl.toLowerCase().substring(relativePath.length + 1);
+  let urlObj;
+  try {
+    if (targetUrl.startsWith('www.')) {
+      // assume https by default
+      targetUrl = 'https://' + targetUrl;
+    }
+    urlObj = new URL(targetUrl);
+
+    if (isRoot) {
+      // child URLs should not set this
+      console.debug(`Request: ${targetUrl}`);
+      rootUrlObj = urlObj;
+    }
+  }
+  catch (err) {
+    urlObj = rootUrlObj;
+    // console.debug(`  path ${targetUrl}`);
+  }
+
+  let { origin, protocol, host } = urlObj;
 
   // weird: protocol would end up being 'https:', instead of 'https'
   protocol = protocol.replace(/[^\w]+/g, '');
-
-  console.debug(`Requesting ${targetUrl}`);
-  console.warn(protocol);
+  const useHttps = protocol === 'https';
 
   const p = proxy(host, {
-    https: protocol === 'https',
+    https: useHttps,
+
+    /**
+     * @see https://www.npmjs.com/package/express-http-proxy#proxyreqoptdecorator--supports-promise-form
+     * @see https://github.com/villadora/express-http-proxy/blob/master/app/steps/decorateProxyReqOpts.js
+     */
+    proxyReqOptDecorator: function (proxyReqOpts, srcReq) {
+      const acceptedEncodings = getHeader(proxyReqOpts.headers, 'accept-encoding')?.split(/, ?/);
+      if (acceptedEncodings && acceptedEncodings.includes(BR)) {
+        pull(acceptedEncodings, BR);
+        proxyReqOpts.headers['accept-encoding'] = acceptedEncodings.join(', ');
+      }
+      return proxyReqOpts;
+    },
+
     proxyReqPathResolver(userReq) {
-      let path = targetUrl.replace(origin.toLowerCase(), '');
+      let path;
+
+      if (origin) {
+        // full url
+        path = targetUrl.replace(origin.toLowerCase(), '');
+      }
+      else {
+        // path only
+        path = targetUrl;
+      }
+
       if (!path.startsWith('/')) {
         path = '/' + path;
       }
+      console.debug(` file  ${targetUrl.replace(rootUrlObj?.origin?.toLowerCase() || '', '')}`);
       return path;
     },
 
@@ -42,16 +94,28 @@ export default function (req, res, next) {
      * @see https://www.npmjs.com/package/express-http-proxy#userresheaderdecorator
      * @see https://github.com/villadora/express-http-proxy/blob/master/app/steps/decorateUserResHeaders.js
      */
-    userResHeaderDecorator(reqHeaders, userReq, userRes, proxyReq, proxyRes) {
+    userResHeaderDecorator(headers, userReq, userRes, proxyReq, proxyRes) {
       // for some reason, this data is hidden from us later on, so we keep track of it here
+
+      const encoding = getHeader(headers, 'content-encoding');
+      // console.warn(' encoding', encoding);
+      if (encoding === BR) {
+        headers['content-encoding'] = 'identity';
+        // delete headers['content-encoding'];
+        delete headers['content-length'];
+        // throw new Error('Invalid encoding: ' + encoding);
+      }
 
       // getHeader(reqHeaders, 'host')
       proxyRes.__meta = {
-        url: proxyReq.originalUrl,
+        url: proxyReq.path || '/',
         proxyReq,
-        reqHeaders
+        reqHeaders: headers,
+        encoding,
+        origin,
+        localOrigin: global.localOrigin
       };
-      return reqHeaders;
+      return headers;
     },
 
     /**
@@ -61,20 +125,20 @@ export default function (req, res, next) {
      */
     async userResDecorator(proxyRes, proxyResData, userReq, userRes) {
       const meta = proxyRes.__meta;
-      const {
-        url,
-        proxyReq,
-        reqHeaders
-      } = meta;
-
       const contentType = getContentType(proxyRes.headers) || '';
+      const { encoding } = meta;
+
+      if (encoding === BR) {
+        // TODO: brotli is not supported -- https://github.com/villadora/express-http-proxy/issues/360
+        throw new Error('Encoding not supported: br');
+      }
 
       try {
-        const stringData = proxyResData.toString('utf8');
-        return transformContent(contentType, meta, stringData);
+        // console.warn(stringData);
+        return transformContent(contentType, meta, proxyResData);
       }
       catch (err) {
-        console.error(' Could not transform file content -', err);
+        throw new Error(`Could not transform file content - ${err.stack || err}`);
       }
     }
   });
