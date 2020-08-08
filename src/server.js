@@ -1,16 +1,24 @@
-const restify = require('restify');
-var proxy = require('./proxy');
+import proxy from './proxy';
+import Express from 'express';
 
-const server = restify.createServer({
-  name: 'localhost'
-});
+const app = Express();
 
-server.use(restify.plugins.queryParser({ mapParams: false }));
+app.use(proxy);
 
-// add proxy
-server.opts('/', proxy.opts);
-server.get('/*', proxy.get);
-server.post('/*', proxy.post);
+export default app;
 
 
-module.exports = server;
+
+// const server = restify.createServer({
+//   name: 'localhost'
+// });
+
+// server.use(restify.plugins.queryParser({ mapParams: false }));
+
+// // add proxy
+// server.opts('/', proxy.opts);
+// server.get('/*', proxy.get);
+// server.post('/*', proxy.post);
+
+
+// module.exports = server;

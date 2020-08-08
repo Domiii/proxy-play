@@ -1,12 +1,18 @@
-require('./util/prettyLog');
+import './util/prettyLog';
 
-const server = require('./server');
+import server from './server';
 
 const port = process.env.PORT || 8080;
 
 function main() {
   server.listen(port, 'localhost', function () {
-    console.log('%s listening at %s', server.name, server.url); //eslint-disable-line
+    // const origin = server.name;
+    const originName = 'http://localhost';
+    const origin = `${originName}:${port}`;
+    console.log('\n\n\nlistening at %s', origin); //eslint-disable-line
+
+    const exampleUrl = 'https://stackoverflow.com';
+    console.log(`Example: ${origin}/${exampleUrl}`);
   });
 }
 

@@ -26,7 +26,7 @@ const config = {
     new LodashModuleReplacementPlugin
   ],
   externals: [
-    nodeExternals({})
+    nodeExternals()
   ]
 };
 

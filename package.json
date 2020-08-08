@@ -13,13 +13,13 @@
     "build:dev": "webpack -d --mode development",
     "build:prod": "webpack -p --mode production",
     "start:build": "nodemon --config nodemon.build.json --exec \"node --stack-trace-limit=1000 -- ./node_modules/webpack/bin/webpack.js --mode development --watch\"",
-    "start:run": "nodemon --inspect-brk --config nodemon.run.json --exec \"node --stack-trace-limit=1000 -- ./dist/bundle.js\""
+    "start:run": "nodemon --config nodemon.run.json --exec \"node --stack-trace-limit=1000 -- ./dist/bundle.js\""
   },
   "dependencies": {
     "colors": "^1.4.0",
-    "lodash": "^4.17.19",
-    "request": "^2.88.2",
-    "restify": "^8.5.1"
+    "express": "^4.17.1",
+    "express-http-proxy": "^1.6.2",
+    "lodash": "^4.17.19"
   },
   "devDependencies": {
     "@babel/core": "^7.11.1",
