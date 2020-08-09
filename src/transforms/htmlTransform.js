@@ -56,13 +56,14 @@ function fixXHRInitCode(meta) {
 
   return `
 function xhrUrl(url) {
-  console.debug('XHR hook', url);
-  return "${localOrigin}/" + url;
+  console.debug('[DBUX] XHR hook', url);
+  return "${localOrigin}/child/" + url;
 }
 
 const s = XMLHttpRequest.prototype.open;
-XMLHttpRequest.prototype.open = (method, url, ...moreArgs) =>
-  s(method, xhrUrl(url), ...moreArgs);
+XMLHttpRequest.prototype.open = function _proxiedOpen(method, url, ...moreArgs) {
+  s.call(this, method, xhrUrl(url), ...moreArgs);
+};
 
 const f = window.fetch;
 window.fetch = (url, ...moreArgs) => f(xhrUrl(url), ...moreArgs);
@@ -89,7 +90,7 @@ function initCode(meta) {
 }
 
 function fixUrl(localOrigin, src) {
-  return urlJoin(localOrigin, 'child', src);
+  return urlJoin(localOrigin, 'child') + '/' + src;
 }
 
 /**
@@ -105,6 +106,11 @@ function fixSrcs(meta, $els) {
     if (src && !src.startsWith(localOrigin)) {
       src = fixUrl(localOrigin, src);
       $el.attr('src', src);
+    }
+    let href = $el.attr('href');
+    if (href && !href.startsWith(localOrigin)) {
+      href = fixUrl(localOrigin, href);
+      $el.attr('href', href);
     }
   }
 }
@@ -140,11 +146,11 @@ export default async function htmlTransform(meta, data) {
 
   const $ = cheerio.load(data, { xmlMode: false });
   const $scriptTags = Array.from($('script')).map(el => $(el));
-  const $iframes = Array.from($('iframe')).map(el => $(el));
+  const $all = Array.from($('*')).map(el => $(el));
 
   // fix src's to also go through the proxy
   fixSrcs(meta, $scriptTags);
-  fixSrcs(meta, $iframes);
+  fixSrcs(meta, $all);
 
   // inject inline JS script tags
   await fixInlineJs(meta, $scriptTags);

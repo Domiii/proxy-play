@@ -16,9 +16,10 @@ function main() {
 
     const exampleUrls = [
       'https://stackoverflow.com',
-      'https://dr-d-king.itch.io/tiny-islands'
+      'https://dr-d-king.itch.io/tiny-islands',
+      'http://todomvc.com/examples/react/'
     ];
-    console.debug(`Example:\n${exampleUrls.map(path => `  ${localOrigin}/root/${path}\n`).join('')}`);
+    console.debug(`Examples:\n${exampleUrls.map(path => `  ${localOrigin}/root/${path}\n`).join('')}`);
   });
 }
 
