@@ -1,4 +1,5 @@
 import instrument from './instrument';
+import colors from 'colors/safe';
 
 // TODO: add caching
 
@@ -21,7 +22,7 @@ export default async function javascriptTransform(meta, buf) {
 
   // log message
   const { targetPath } = meta;
-  console.debug(`    ${ok ? 'INST' : 'skip'} ${targetPath} (${kb} kb${symbolCount ? `, ${symbolCount} symbols` : ''})`);
+  console.debug(`    ${ok ? colors.cyan('INST') : 'skip'} ${targetPath} (${kb} kb${symbolCount ? `, ${symbolCount} symbols` : ''})`);
 
   // instrumentation
   if (ok) {

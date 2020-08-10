@@ -10,7 +10,18 @@ app.use('/root/*', proxyRoot);
 app.use('/child/*', proxyChild);
 
 // -> http://localhost:8080/dbux-runtime/index.js
-app.use('/dbux-runtime', express.static('node_modules/@dbux/runtime/dist'))
+app.use('/dbux-runtime', express.static('node_modules/@dbux/runtime/dist'));
+
+app.use(function errorHandler (err, req, res, next) {
+
+  console.error(`Unable to process request for ${req.originalUrl} -`, err);
+
+  if (res.headersSent) {
+    return next(err)
+  }
+  res.status(500)
+  res.render('error', { error: err })
+});
 
 // app.use(
 //   function errorHandler(err, req, res, next) {
