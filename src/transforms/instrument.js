@@ -2,10 +2,12 @@ import buildBabelOptions from '@dbux/cli/dist/util/buildBabelOptions';
 import { transformSync } from '@babel/core';
 
 export default function instrument(inputCode) {
+  // see https://github.com/Domiii/dbux/dbux-cli/src/commandCommons.js
   const options = {
-    vanilla: false,
+    esnext: true,
     dontInjectDbux: false,
-    dontAddPresets: true
+    dontAddPresets: true,
+    verbose: false
   };
   const babelOptions = buildBabelOptions(options);
   const outputCode = transformSync(inputCode, babelOptions).code;
