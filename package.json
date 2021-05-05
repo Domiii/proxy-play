@@ -8,7 +8,7 @@
   "author": "",
   "license": "ISC",
   "scripts": {
-    "start": "npm-run-all -p start:build start:run",
+    "start": "node node_modules/npm-run-all/bin/npm-run-all -p start:build start:run",
     "clean": "rm dist/bundle.js",
     "build:dev": "webpack -d --mode development",
     "build:prod": "webpack -p --mode production",

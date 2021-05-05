@@ -22,7 +22,8 @@ export default async function javascriptTransform(meta, buf) {
 
   // log message
   const { targetPath } = meta;
-  console.debug(`    ${ok ? colors.cyan('INST') : 'skip'} ${targetPath} (${kb} kb${symbolCount ? `, ${symbolCount} symbols` : ''})`);
+  const statusText = ok ? colors.cyan('INST') : colors.red('skip');
+  console.debug(`    ${statusText} ${targetPath} (${kb} kb${symbolCount ? `, ${symbolCount} symbols` : ''})`);
 
   // instrumentation
   if (ok) {

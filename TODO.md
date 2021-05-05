@@ -1,3 +1,5 @@
+* getting a lot of 404's (on http://localhost:8080/root/https://www.google.com)
+* set Access-Control-Allow-Origin
 * store JS files prior to instrumentation, so we can use Dbux to trace the code
 * circumvent basic security checks
    * `sript-src`, `unsafe-inline`, hash, `nonce`
